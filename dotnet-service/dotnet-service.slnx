@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/DotnetService.Tests.csproj" />
+  </Folder>
+  <Project Path="DotnetService.csproj" />
+</Solution>
