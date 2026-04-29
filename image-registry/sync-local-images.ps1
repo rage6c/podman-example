@@ -23,14 +23,38 @@ if (-not $images) {
     exit 0
 }
 
+$publishedTargets = [System.Collections.Generic.HashSet[string]]::new()
+
 foreach ($image in $images) {
     $parts = $image.Split("|", 2)
     $repository = $parts[0]
     $tag = $parts[1]
     $source = "${repository}:${tag}"
-    $target = "${RegistryHost}:${RegistryPort}/${Namespace}/${repository}:${tag}"
+    $targetRepository = $repository
+
+    if ($targetRepository.StartsWith("${RegistryHost}:${RegistryPort}/")) {
+        continue
+    }
+
+    if (-not ($targetRepository -match '^localhost/(local/)?[^/]+$')) {
+        continue
+    }
+
+    if ($targetRepository.StartsWith("localhost/")) {
+        $targetRepository = $targetRepository.Substring("localhost/".Length)
+    }
+
+    if ($targetRepository.StartsWith("${Namespace}/")) {
+        $targetRepository = $targetRepository.Substring($Namespace.Length + 1)
+    }
+
+    $target = "${RegistryHost}:${RegistryPort}/${Namespace}/${targetRepository}:${tag}"
+
+    if (-not $publishedTargets.Add($target)) {
+        continue
+    }
 
     Write-Host "Syncing $source -> $target"
     & $podmanExe tag $source $target
-    & $podmanExe push $target
+    & $podmanExe push --tls-verify=false $target
 }

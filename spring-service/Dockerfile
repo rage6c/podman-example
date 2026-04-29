@@ -1,14 +1,19 @@
 FROM registry.access.redhat.com/ubi9/openjdk-17 AS builder
 
+USER 0
+
 WORKDIR /workspace
 
+RUN microdnf install -y gzip tar \
+    && microdnf clean all
+
 COPY .mvn/ .mvn/
-COPY mvnw mvnw
+COPY --chmod=0755 mvnw mvnw
 COPY mvnw.cmd mvnw.cmd
 COPY pom.xml pom.xml
 COPY src/ src/
 
-RUN chmod +x mvnw && ./mvnw -DskipTests package
+RUN ./mvnw -DskipTests package
 
 FROM registry.access.redhat.com/ubi9/openjdk-17-runtime
 
@@ -20,4 +25,4 @@ EXPOSE 8080
 
 ENV SERVER_PORT=8080
 
-ENTRYPOINT ["java", "-jar", "/deployments/app.jar"]
+ENTRYPOINT ["sh", "-c", "mkdir -p /logs/spring-service && exec java -jar /deployments/app.jar"]

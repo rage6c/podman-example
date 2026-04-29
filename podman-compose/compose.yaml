@@ -4,46 +4,64 @@ services:
       context: ../spring-service
     image: local/spring-service:latest
     container_name: spring-service
+    user: "0"
+    volumes:
+      - logs:/logs
 
   python-service:
     build:
       context: ../python-service
     image: local/python-service:latest
     container_name: python-service
+    user: "0"
+    volumes:
+      - logs:/logs
 
   dotnet-service:
     build:
       context: ../dotnet-service
     image: local/dotnet-service:latest
     container_name: dotnet-service
+    user: "0"
+    volumes:
+      - logs:/logs
 
   quarkus-native-service:
     build:
       context: ../quarkus-native-service
     image: local/quarkus-native-service:latest
     container_name: quarkus-native-service
+    user: "0"
+    volumes:
+      - logs:/logs
 
   ngix-proxy:
     build:
       context: ../ngix-proxy
     image: local/ngix-proxy:latest
     container_name: ngix-proxy
+    user: "0"
     depends_on:
       - spring-service
       - python-service
       - quarkus-native-service
     ports:
       - "8080:8080"
+    volumes:
+      - logs:/logs
 
   image-registry:
     build:
       context: ../image-registry
     image: local/image-registry:latest
     container_name: image-registry
+    user: "0"
     ports:
       - "5000:5000"
     volumes:
+      - logs:/logs
       - registry-data:/var/lib/registry
 
 volumes:
+  logs:
   registry-data:
